@@ -1,6 +1,5 @@
 name: snowflake-devops-demo
 
-# Controls when the action will run. 
 on:
   push:
     branches:
@@ -8,7 +7,6 @@ on:
     paths:
       - 'dbscripts/**'
 
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
 jobs:
@@ -16,20 +14,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: Checkout repository
         uses: actions/checkout@v2
 
       - name: Use Python 3.8.x
-        uses: actions/setup-python@v2.2.1
+        uses: actions/setup-python@v2
         with:
-          python-version: 3.8.x
-   # creating a dynamic file in from the private key stored in git secret and providing access only
-   # to owner so chmod 600
-      - name: Decrypt RSA key
+          python-version: 3.8
+
+      - name: Create RSA key file
         run: |
-          echo "${{ secrets.SNOWFLAKE_PRIVATE_KEY }}"  > ./config/rsa_key.p8
-          chmod 600 ./config/rsa_key.p8 
+          mkdir -p config
+          echo "${{ secrets.SNOWFLAKE_PRIVATE_KEY }}" > ./config/rsa_key.p8
+          chmod 600 ./config/rsa_key.p8
+
       - name: Run schemachange
         env:
           SF_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
@@ -37,12 +35,18 @@ jobs:
           SF_ROLE: ${{ secrets.SF_ROLE }}
           SF_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
           SF_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
-          SNOWFLAKE_PRIVATE_KEY_PATH: ${{ secrets.SNOWFLAKE_PRIVATE_KEY_PATH }}
         run: |
-          echo "GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
-          python --version
-          echo "Step 1: Installing schemachange"
+          echo "Installing schemachange..."
           pip install schemachange
-          
-          echo "Step 2: Running schemachange"
-          schemachange -f $GITHUB_WORKSPACE/dbscripts -a $SF_ACCOUNT -u $SF_USERNAME -r $SF_ROLE -w $SF_WAREHOUSE -d $SF_DATABASE -c $SF_DATABASE.SCHEMACHANGE.CHANGE_HISTORY --create-change-history-table
+
+          echo "Running schemachange with key-pair auth"
+          schemachange \
+            -f dbscripts \
+            -a $SF_ACCOUNT \
+            -u $SF_USERNAME \
+            -r $SF_ROLE \
+            -w $SF_WAREHOUSE \
+            -d $SF_DATABASE \
+            --private-key-path ./config/rsa_key.p8 \
+            -c $SF_DATABASE.SCHEMACHANGE.CHANGE_HISTORY \
+            --create-change-history-table
