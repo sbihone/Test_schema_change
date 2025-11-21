@@ -2,7 +2,7 @@ name: Deploy Snowflake Objects
 
 on:
   # Trigger on push for the dev branch
-  push:
+  push: 
     branches:
       - dev
 
