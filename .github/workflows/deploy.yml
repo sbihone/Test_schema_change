@@ -42,7 +42,7 @@ jobs:
         run: pip install schemachange
       
       - name: Debug folder contents
-        run: ls -la /home/runner/work/snowflake_git_schemachanger/snowflake_git_schemachanger/
+        run: ls -la /home/runner/work/Test_schema_change/Test_schema_change/
 
       - name: Decrypt RSA key
         run: |
