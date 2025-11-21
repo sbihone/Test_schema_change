@@ -1,60 +1,41 @@
-name: Deploy Snowflake Objects
+name: snowflake-devops-demo
 
+# Controls when the action will run. 
 on:
-  # Trigger on push for the dev branch
   push:
     branches:
-      - dev
-
-  # Trigger on pull request after merge is complete or request is closed
-  pull_request:
-    types: [closed]
-    branches:
       - main
-      - qa
+    paths:
+      - 'dbscripts/**'
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
 
 jobs:
-  deploy:
+  deploy-snowflake-changes-job:
     runs-on: ubuntu-latest
+
     steps:
-      - name: checkout repo
-        uses: actions/checkout@v4
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-      - name: Setup Python 3.10
-        uses: actions/setup-python@v5
+      - name: Use Python 3.8.x
+        uses: actions/setup-python@v2.2.1
         with:
-          python-version: '3.10'
-
-      - name: Check branch
-        id: check_branch
+          python-version: 3.8.x
+        env:
+          SF_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+          SF_USERNAME: ${{ secrets.SNOWFLAKE_USERNAME }}
+          SF_ROLE: ${{ secrets.SF_ROLE }}
+          SF_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
+          SF_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
+          SF_PASSWORD: ${{ secrets.SF_PASSWORD }}
         run: |
-          echo "Pushing to : ${{ github.ref }}"
-
-#installing required library on container 
-
-      - name: instaling snowflake
-        run: pip install snowflake
-      
-      - name: instaling snowflake-connector-python
-        run: pip install snowflake-connector-python
-      
-      - name: instaling schemachange
-        run: pip install schemachange
-      
-      - name: Debug folder contents
-        run: ls -la /home/runner/work/<git_repo_name>/<git_repo_name>/
-
-
- #setting environment variable by using all the secrets
-      - name: Set Environment Variable
-        env: 
-          SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
-          SNOWFLAKE_USERNAME: ${{ secrets.SNOWFLAKE_USERNAME }}
-          SNOWFLAKE_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
-          SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
-          SNOWFLAKE_PRIVATE_KEY_PATH: ${{ secrets.SNOWFLAKE_PRIVATE_KEY_PATH}}
-          SNOWFLAKE_DATABASE: ${{ github.ref == 'refs/heads/main' && secrets.SNOWFLAKE_DATABASE_PROD ||  github.ref == 'refs/heads/qa' && secrets.SNOWFLAKE_DATABASE_QA  ||  secrets.SNOWFLAKE_DATABASE_DEV}}
- 
-
-
-  
+          echo "GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
+          python --version
+          echo "Step 1: Installing schemachange"
+          pip install schemachange
+          
+          echo "Step 2: Running schemachange"
+          schemachange -f $GITHUB_WORKSPACE/dbscripts -a $SF_ACCOUNT -u $SF_USERNAME -r $SF_ROLE -w $SF_WAREHOUSE -d $SF_DATABASE -c $SF_DATABASE.SCHEMACHANGE.CHANGE_HISTORY --create-change-history-table
