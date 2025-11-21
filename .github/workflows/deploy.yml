@@ -57,7 +57,6 @@ jobs:
           SNOWFLAKE_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
           SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
           SNOWFLAKE_PRIVATE_KEY_PATH: ${{ secrets.SNOWFLAKE_PRIVATE_KEY_PATH}}
-          SNOWFLAKE_PRIVATE_KEY_PASSPHRASE: ${{ secrets.SNOWFLAKE_PRIVATE_KEY_PASSPHRASE}}
           SNOWFLAKE_DATABASE: ${{ github.ref == 'refs/heads/main' && secrets.SNOWFLAKE_DATABASE_PROD ||  github.ref == 'refs/heads/qa' && secrets.SNOWFLAKE_DATABASE_QA  ||  secrets.SNOWFLAKE_DATABASE_DEV}}
  
         run: |
