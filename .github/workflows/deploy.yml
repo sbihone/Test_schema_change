@@ -68,7 +68,7 @@ jobs:
           echo "Current directory: $(pwd)"
 
           
-          for folder in /home/runner/work/snowflake_git_schemachanger/snowflake_git_schemachanger/to_deploy_Snowflake_code/*/; do
+          for folder in /home/runner/work/Test_schema_change/Test_schema_change/to_deploy_Snowflake_code/*/; do
             if [ -d "$folder" ]; then 
               echo "Processing folder $(basename $folder) ..."
            
